@@ -3,9 +3,23 @@ const express = require('express');
 // Import and require mysql2
 const mysql = require('mysql2');
 // Import and require inquirer
-// const inquirer = require('inquirer');q
+const inquirer = require('inquirer');
 // Import and require console.table
 const cTable = require('console.table');
+
+const questions = () => {
+  return inquirer.prompt([
+    {
+      type: 'list',
+      name: 'options',
+      message: 'What would you like to do?',
+      choices: ["View all departments","View all roles","View all employees","Add a department","Add a role","Add an employee","Update an employee role","Quit"]
+    }
+  ])
+}
+
+
+
 
 const PORT = process.env.PORT || 3001;
 const app = express();
@@ -27,15 +41,15 @@ const db = mysql.createConnection(
   console.log(`Connected to the business_db database.`)
 );
 
-// routes
 // select all departments
-app.get('/api/department', (req, res) => {
+const selectDepartment = () => {
   const sql = `SELECT * FROM department`;
   db.query(sql, (err, result) => {
-    console.log("/api/department GET request");
-    res.send(JSON.stringify(result));
+    console.log("showing departments");
+    console.table(result);
+    questions();
   })
-});
+};
 
 // select all roles
 app.get('/api/role', (req, res) => {
@@ -112,3 +126,11 @@ app.put('/api/update-employee', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+
+const init = () => {
+  questions()
+  .then(selectDepartment)
+}
+
+init();
