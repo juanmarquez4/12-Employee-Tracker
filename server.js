@@ -7,19 +7,6 @@ const inquirer = require('inquirer');
 // Import and require console.table
 const cTable = require('console.table');
 
-const questions = () => {
-  return inquirer.prompt([
-    {
-      type: 'list',
-      name: 'options',
-      message: 'What would you like to do?',
-      choices: ["View all departments","View all roles","View all employees","Add a department","Add a role","Add an employee","Update an employee role","Quit"]
-    }
-  ])
-}
-
-
-
 
 const PORT = process.env.PORT || 3001;
 const app = express();
@@ -41,6 +28,19 @@ const db = mysql.createConnection(
   console.log(`Connected to the business_db database.`)
 );
 
+
+// Initialise inquirer
+const questions = () => {
+  return inquirer.prompt([
+    {
+      type: 'list',
+      name: 'options',
+      message: 'What would you like to do?',
+      choices: ["View all departments","View all roles","View all employees","Add a department","Add a role","Add an employee","Update an employee role","Quit"]
+    }
+  ])
+}
+
 // select all departments
 const selectDepartment = () => {
   const sql = `SELECT * FROM department`;
@@ -52,85 +52,79 @@ const selectDepartment = () => {
 };
 
 // select all roles
-app.get('/api/role', (req, res) => {
+const selectRole = ()  => {
   const sql = `SELECT * FROM role`;
   db.query(sql, (err, result) => {
-    console.log("/api/role GET request");
-    res.send(JSON.stringify(result));
+    console.log("showing roles");
+    console.table(result);
+    questions();
   });
-});
+};
 
 // select all employees
-app.get('/api/employee', (req, res) => {
+const selectEmployee = ()  => {
   const sql = `SELECT * FROM employee`;
   db.query(sql, (err, result) => {
-    console.log("/api/employee GET request");
-    res.send(JSON.stringify(result));
+    console.log("showing employee");
+    console.table(result);
+    questions();
   });
-});
+};
 
 // add a department
-app.post('/api/add-department', (req, res) => {
+const addDepartment = () => {
   const sql = `INSERT INTO department (name) VALUES (?)`;
   db.query(sql, req.body.name, (err, result) => {
-    res.send(JSON.stringify(result));
+    console.log("department added");
+    questions();
   });
-});
+};
 
 // add a role
-app.post('/api/add-role', (req, res) => {
+const addRole = () => {
   const sql = `INSERT INTO role (title, salary) VALUES (?, ?)`;
   db.query(sql, [req.body.title, req.body.salary], (err, result) => {
-    res.send(JSON.stringify(result));
+    console.log("role added");
+    questions();
   });
-});
+};
 
 // add an employee
-app.post('/api/add-employee', (req, res) => {
+const addEmployee = () => {
   const sql = `INSERT INTO employee (first_name, last_name) VALUES (?, ?)`;
   db.query(sql, [req.body.first_name, req.body.last_name], (err, result) => {
-    res.send(JSON.stringify(result));
+    console.log("employee added");
+    questions();
   });
-});
+};
 
 // update an employee
-app.put('/api/update-employee', (req, res) => {
+const updateEmployee = () => {
   const sql = `
-  UPDATE employee
-  WHERE role_id = ?
-  JOIN role ON role.id = employee.role_id `;
+  UPDATE employee WHERE role_id = ? JOIN role ON role.id = employee.role_id `;
   db.query(sql, req.body.role_id, (err, result) => {
-    res.send(JSON.stringify(result));
+    console.log("Employee updated");
+    questions();
   });
-});
-
-// // Hardcoded query: DELETE FROM course_names WHERE id = 3;
-
-// db.query(`DELETE FROM course_names WHERE id = ?`, 3, (err, result) => {
-//   if (err) {
-//     console.log(err);
-//   }
-//   console.log(result);
-// });
-
-// // Query database
-// db.query('SELECT * FROM course_names', function (err, results) {
-//   console.log(results);
-// });
-
-// // Default response for any other request (Not Found)
-// app.use((req, res) => {
-//   res.status(404).end();
-// });
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
+};
 
 const init = () => {
   questions()
-  .then(selectDepartment)
+  .then((res) => {
+    switch (res.options) {
+      case "View all departments":
+        selectDepartment();
+        break;
+
+      case "View all roles":
+        selectRole();
+        break;
+
+      case "View all employees":
+        selectEmployee();
+        break
+    }
+  })
 }
 
 init();
